@@ -1,77 +1,20 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Painel de Peças</title>
 <style>
-body{font-family:Arial;background:#0f172a;color:white;margin:0}
-header{background:#020617;padding:18px;font-size:22px}
-.container{padding:20px}
-.card{background:#1e293b;padding:20px;border-radius:10px;margin:10px;display:inline-block;width:200px}
+body{margin:0;font-family:Arial;background:#0f172a;color:white}
+header{background:#020617;padding:15px;font-size:22px}
+iframe{width:100%;height:95vh;border:none}
 </style>
 </head>
+
 <body>
 
 <header>Painel de Peças</header>
 
-<div class="container">
-<div class="card">Total peças<br><b id="total">0</b></div>
-<div class="card">Atrasadas<br><b id="atrasadas">0</b></div>
-<div class="card">No prazo<br><b id="prazo">0</b></div>
-<div class="card">Entregues<br><b id="entregues">0</b></div>
-</div>
-
-<script>
-
-const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXT05p1mxD9mFsRFqzeG4ebXF10jVJra0AncChPKXz6UcrtpYFMZ31qMpcSCKnvQ/pub?gid=1723717147&single=true&output=csv";
-
-async function carregar(){
-
-const res = await fetch(csvUrl);
-const text = await res.text();
-
-const rows = text.split("\n").map(r => r.split(","));
-const headers = rows[0];
-const data = rows.slice(1);
-
-let total = data.length;
-let atrasadas = 0;
-let prazo = 0;
-let entregues = 0;
-
-let today = new Date();
-
-data.forEach(r => {
-
-let prazoEntrega = new Date(r[headers.indexOf("PRAZO DE ENTREGA")]);
-let entrega = r[headers.indexOf("DATA DE ENTREGA")];
-
-if(entrega){
-entregues++;
-}
-else if(!isNaN(prazoEntrega)){
-
-if(prazoEntrega < today){
-atrasadas++;
-}else{
-prazo++;
-}
-
-}
-
-});
-
-document.getElementById("total").innerText = total;
-document.getElementById("atrasadas").innerText = atrasadas;
-document.getElementById("prazo").innerText = prazo;
-document.getElementById("entregues").innerText = entregues;
-
-}
-
-carregar();
-setInterval(carregar,30000);
-
-</script>
+<iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQXT05p1mxD9mFsRFqzeG4ebXF10jVJra0AncChPKXz6UcrtpYFMZ31qMpcSCKnvQ/pubhtml?gid=1723717147&single=true"></iframe>
 
 </body>
 </html>
