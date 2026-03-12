@@ -1,20 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Painel de Peças</title>
-<style>
-body{margin:0;font-family:Arial;background:#0f172a;color:white}
-header{background:#020617;padding:15px;font-size:22px}
-iframe{width:100%;height:95vh;border:none}
-</style>
-</head>
+const prazoIndex = headers.indexOf("PRAZO DE ENTREGA");
+const entregaIndex = headers.indexOf("DATA DE ENTREGA");
+const osIndex = headers.indexOf("OS");
+const fornecedorIndex = headers.indexOf("FORNECEDOR");
+const descricaoIndex = headers.indexOf("DESCRIÇÃO DA PEÇA");
 
-<body>
+data.forEach(row => {
 
-<header>Painel de Peças</header>
+let prazoEntrega = new Date(row[prazoIndex]);
+let entrega = row[entregaIndex];
 
-<iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQXT05p1mxD9mFsRFqzeG4ebXF10jVJra0AncChPKXz6UcrtpYFMZ31qMpcSCKnvQ/pubhtml?gid=1723717147&single=true"></iframe>
+if(entrega){
+entregues++;
+}
+else if(!isNaN(prazoEntrega)){
 
-</body>
-</html>
+if(prazoEntrega < today){
+atrasadas++;
+}else{
+prazo++;
+}
+
+}
+
+});
