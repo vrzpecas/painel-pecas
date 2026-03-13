@@ -1,10 +1,18 @@
 export default async function handler(req, res) {
 
-if (req.method !== "POST") {
-  return res.status(405).json({ erro: "Método não permitido" });
+res.setHeader("Access-Control-Allow-Origin","*");
+res.setHeader("Access-Control-Allow-Methods","POST, OPTIONS");
+res.setHeader("Access-Control-Allow-Headers","Content-Type");
+
+if(req.method === "OPTIONS"){
+return res.status(200).end();
 }
 
-try {
+if (req.method !== "POST") {
+return res.status(405).json({ erro: "Método não permitido" });
+}
+
+try{
 
 const { pergunta } = req.body;
 
@@ -29,7 +37,7 @@ res.status(200).json({
 resposta:data.choices[0].message.content
 });
 
-} catch (error) {
+}catch(error){
 
 res.status(500).json({erro:error.message});
 
