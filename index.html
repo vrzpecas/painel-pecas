@@ -450,7 +450,7 @@ box.innerHTML+= '<div class="messageUser"><b>Você:</b> '+pergunta+'</div>';
 
 try{
 
-let res = await fetch("https://painel-pecas.vercel.app/api/chat",{
+let res = await fetch("/api/chat",{
 method:"POST",
 headers:{ "Content-Type":"application/json"},
 body: JSON.stringify({ pergunta })
