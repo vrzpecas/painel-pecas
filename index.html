@@ -438,7 +438,27 @@ tabela.innerHTML+=`<tr><td>${r["DESCRIÇÃO DA PEÇA"]}</td><td>${r["FORNECEDOR"
 
 /* AI */
 
-function responderAI(){
+async function responderAI(){
+
+let input = document.getElementById("chatInput")
+let pergunta = input.value
+
+let res = await fetch("https://painel-pecas.vercel.app/api/chat", {
+method:"POST",
+headers:{ "Content-Type":"application/json"},
+body: JSON.stringify({ pergunta })
+})
+
+let data = await res.json()
+
+let box = document.getElementById("chatMessages")
+
+box.innerHTML += "<div><b>Você:</b> "+pergunta+"</div>"
+box.innerHTML += "<div><b>IA:</b> "+data.resposta+"</div>"
+
+input.value=""
+
+}
 
 let input=document.getElementById("chatInput");
 let pergunta=input.value.toLowerCase();
