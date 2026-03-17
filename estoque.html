@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Estoque</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<style>
+body{font-family:'Inter',sans-serif;margin:0;background:#0f0f10;color:#fff;}
+header{background:#000;padding:22px;font-size:22px;font-weight:600;border-bottom:3px solid #e30613;}
+.container{padding:30px;max-width:1300px;margin:auto;}
+
+.tabs button{
+background:#18181b;
+border:1px solid #27272a;
+padding:10px 18px;
+margin-right:10px;
+color:#fff;
+border-radius:10px;
+cursor:pointer;
+}
+
+.section{display:none;margin-top:20px;}
+.section.active{display:block;}
+
+table{width:100%;border-collapse:collapse;margin-top:15px;}
+th,td{padding:12px;border-bottom:1px solid #27272a;}
+
+#menuBtn{position:fixed;top:20px;left:20px;background:#e30613;border:none;color:#fff;padding:10px;border-radius:8px;cursor:pointer;z-index:20;}
+#sideMenu{position:fixed;top:0;left:-220px;width:220px;height:100%;background:#0b0b0c;transition:0.3s;padding-top:80px;}
+#sideMenu a{display:block;padding:16px;color:#fff;text-decoration:none;}
+#sideMenu a:hover{background:#e30613;}
+</style>
+</head>
+
+<body>
+
+<button id="menuBtn" onclick="toggleMenu()">☰</button>
+
+<div id="sideMenu">
+<a href="index.html">Painel</a>
+<a href="estoque.html">Estoque</a>
+</div>
+
+<header>Estoque</header>
+
+<div class="container">
+
+<div class="tabs">
+<button onclick="mostrar('estoque')">Estoque</button>
+<button onclick="mostrar('os')">Buscar OS</button>
+</div>
+
+<div id="estoque" class="section active">
+<table>
+<thead>
+<tr>
+<th>NUMERAÇÃO</th>
+<th>MARCA</th>
+<th>MODELO</th>
+<th>OS</th>
+<th>PEÇA</th>
+<th>RESPONSAVEL</th>
+</tr>
+</thead>
+<tbody id="tEstoque"></tbody>
+</table>
+</div>
+
+<div id="os" class="section">
+<select id="osSelect" onchange="buscarOS()"></select>
+<table>
+<thead>
+<tr><th>Peça</th><th>Responsável</th></tr>
+</thead>
+<tbody id="tOS"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+
+let menuOpen=false;
+function toggleMenu(){
+let m=document.getElementById("sideMenu");
+menuOpen=!menuOpen;
+m.style.left = menuOpen ? "0px" : "-220px";
+}
+
+function mostrar(id){
+document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+const url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTzcuYj91nTsIkmp86gpPBW1REkCitAvBtiLVB4RQvRniDi_cj5Pmd4mcylqNiipw/pub?gid=1283911979&single=true&output=csv";
+
+let dados=[];
+
+function verificarOS(v){
+if(!v) return "SEM OS";
+return v.toLowerCase().includes("reservado") ? v : "SEM OS";
+}
+
+function extrairNumeroOS(v){
+if(!v) return null;
+let num = v.toString().match(/\d+/);
+return num ? num[0] : null;
+}
+
+function carregar(){
+
+Papa.parse(url,{
+download:true,
+header:false,
+skipEmptyLines:true,
+
+complete:function(res){
+
+dados = res.data.slice(2);
+
+let t=document.getElementById("tEstoque");
+t.innerHTML="";
+
+dados.forEach(r=>{
+let os=verificarOS(r[3]);
+
+t.innerHTML+=`<tr>
+<td>${r[0]}</td>
+<td>${r[1]}</td>
+<td>${r[2]}</td>
+<td>${os}</td>
+<td>${r[4]}</td>
+<td>${r[9]}</td>
+</tr>`;
+});
+
+popularOS();
+
+}
+
+});
+
+}
+
+function popularOS(){
+let select=document.getElementById("osSelect");
+select.innerHTML="<option>Escolha OS</option>";
+
+let lista=[...new Set(dados.map(r=>extrairNumeroOS(r[3])))];
+
+lista.forEach(os=>{
+if(os){
+select.innerHTML+=`<option value="${os}">${os}</option>`;
+}
+});
+}
+
+function buscarOS(){
+let os=document.getElementById("osSelect").value;
+let t=document.getElementById("tOS");
+t.innerHTML="";
+
+dados.forEach(r=>{
+let numero=extrairNumeroOS(r[3]);
+if(numero===os){
+t.innerHTML+=`<tr><td>${r[4]}</td><td>${r[9]}</td></tr>`;
+}
+});
+}
+
+carregar();
+
+</script>
+
+</body>
+</html>
