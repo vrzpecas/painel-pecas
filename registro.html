@@ -22,6 +22,7 @@ height:100%;
 background:#0b0b0b;
 transition:0.3s;
 z-index:999;
+border-right:1px solid #222;
 }
 
 .menu-item{
@@ -37,15 +38,16 @@ background:#e30613;
 background:#e30613;
 }
 
-/* HEADER */
-.header{
-  padding:20px;
-  border-bottom:2px solid red;
-  display:flex;
-  align-items:center;
-  gap:15px;
+/* HEADER PADRÃO IGUAL ESTOQUE */
+header{
+display:flex;
+align-items:center;
+gap:15px;
+padding:20px;
+border-bottom:2px solid red;
 }
 
+/* CONTEÚDO */
 .container{
   padding:20px;
 }
@@ -89,12 +91,12 @@ button{
 
 <body>
 
-<!-- MENU CORRETO -->
+<!-- MENU LATERAL IGUAL AO ESTOQUE -->
 <div id="sideMenu">
 
 <div style="display:flex;justify-content:space-between;align-items:center;padding:15px;">
 <span style="font-weight:bold;">Menu</span>
-<button onclick="toggleMenu()" style="background:none;border:none;color:#fff;font-size:20px;">✕</button>
+<button onclick="toggleMenu()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">✕</button>
 </div>
 
 <a href="index.html" class="menu-item">Solicitação de Peças</a>
@@ -103,12 +105,11 @@ button{
 
 </div>
 
-<!-- HEADER -->
-<header style="display:flex;align-items:center;gap:15px;padding:20px;border-bottom:2px solid red;">
+<!-- HEADER CORRETO -->
+<header>
 <button onclick="toggleMenu()" style="background:transparent;border:none;color:#fff;font-size:22px;cursor:pointer;">☰</button>
 <h2 style="margin:0;">Registro de Peça</h2>
 </header>
-</div>
 
 <div class="container">
 
@@ -172,6 +173,7 @@ button{
 
 <script>
 let menu=false;
+
 function toggleMenu(){
 let m=document.getElementById("sideMenu");
 menu=!menu;
