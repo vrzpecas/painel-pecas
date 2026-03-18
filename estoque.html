@@ -79,26 +79,14 @@ text-decoration:none;
 <div class="card">Reservado<h2 id="com" style="color:#00ff88"></h2></div>
 </div>
 
-<!-- 🔥 BOTÕES NO LUGAR CERTO -->
+<!-- 🔥 BOTÕES -->
 <div class="actions">
 <button onclick="mostrar('estoque')">Estoque</button>
 <button onclick="mostrar('os')">Buscar OS</button>
 <button onclick="mostrar('mov')">Movimento</button>
 </div>
 
-<div class="section">
-<h3 style="margin-left:10px;">Ranking Top 5 carros</h3>
-<table>
-<thead><tr><th>Marca / Modelo</th><th>Quantidade</th></tr></thead>
-<tbody id="rankingTabela"></tbody>
-</table>
-</div>
-
-<div class="section">
-<h3>Top 5 carros</h3>
-<canvas id="grafico"></canvas>
-</div>
-
+<!-- 🔥 RESULTADOS -->
 <div id="estoque" class="section hidden">
 <table>
 <thead><tr><th>NUM</th><th>MARCA</th><th>MODELO</th><th>OS</th><th>PEÇA</th><th>RESP</th></tr></thead>
@@ -115,6 +103,20 @@ text-decoration:none;
 <div id="mov" class="section hidden">
 <select id="dataSelect" onchange="filtrarData()"></select>
 <table><tbody id="tMov"></tbody></table>
+</div>
+
+<!-- 🔽 RANKING AGORA POR ÚLTIMO -->
+<div class="section">
+<h3 style="margin-left:10px;">Ranking Top 5 carros</h3>
+<table>
+<thead><tr><th>Marca / Modelo</th><th>Quantidade</th></tr></thead>
+<tbody id="rankingTabela"></tbody>
+</table>
+</div>
+
+<div class="section">
+<h3>Top 5 carros</h3>
+<canvas id="grafico"></canvas>
 </div>
 
 </div>
@@ -209,8 +211,48 @@ type:"bar",
 data:{labels:top.map(x=>x[0].toUpperCase()),datasets:[{data:top.map(x=>x[1])}]}
 });
 
+popularOS();
+popularDatas();
+
 }
 });
+}
+
+function popularOS(){
+let sel=document.getElementById("osSelect");
+sel.innerHTML="<option>OS</option>";
+[...new Set(dados.filter(r=>r[7] && reservado(r[3]) && r[8]).map(r=>r[8]))]
+.sort((a,b)=>b-a)
+.forEach(o=>sel.innerHTML+=`<option>${o}</option>`);
+}
+
+function buscarOS(){
+let os=document.getElementById("osSelect").value;
+let itens=dados.filter(r=>r[8]==os && reservado(r[3]));
+
+let html="";
+itens.forEach(r=>{
+html+=`<tr><td>${r[4]}</td><td>${r[9]}</td><td>${r[7]}</td></tr>`;
+});
+document.getElementById("tOS").innerHTML=html;
+}
+
+function popularDatas(){
+let sel=document.getElementById("dataSelect");
+sel.innerHTML="<option>Data</option>";
+[...new Set(dados.map(r=>r[7]).filter(Boolean))]
+.forEach(d=>sel.innerHTML+=`<option>${d}</option>`);
+}
+
+function filtrarData(){
+let d=document.getElementById("dataSelect").value;
+let html="";
+dados.forEach(r=>{
+if(r[7]==d){
+html+=`<tr><td>${r[4]}</td><td>${r[9]}</td><td>${r[7]}</td></tr>`;
+}
+});
+document.getElementById("tMov").innerHTML=html;
 }
 
 carregar();
