@@ -54,7 +54,7 @@ text-decoration:none;
 <div id="sideMenu">
 <div style="display:flex;justify-content:space-between;align-items:center;padding:15px;">
 <span style="font-weight:bold;">Menu</span>
-<button onclick="toggleMenu()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">✕</button>
+<button onclick="toggleMenu()" style="background:none;border:none;color:#fff;font-size:20px;">✕</button>
 </div>
 
 <a href="index.html" class="menu-item">Solicitação de Peças</a>
@@ -63,7 +63,7 @@ text-decoration:none;
 </div>
 
 <header style="display:flex;align-items:center;gap:15px;">
-<button onclick="toggleMenu()" style="background:transparent;border:none;color:#fff;font-size:22px;cursor:pointer;">☰</button>
+<button onclick="toggleMenu()" style="background:transparent;border:none;color:#fff;font-size:22px;">☰</button>
 <h2 style="margin:0;">Estoque</h2>
 </header>
 
@@ -79,7 +79,7 @@ text-decoration:none;
 <div class="card">Reservado<h2 id="com" style="color:#00ff88"></h2></div>
 </div>
 
-<!-- 🔥 BOTÕES AGORA AQUI -->
+<!-- 🔥 BOTÕES NO LUGAR CERTO -->
 <div class="actions">
 <button onclick="mostrar('estoque')">Estoque</button>
 <button onclick="mostrar('os')">Buscar OS</button>
@@ -120,6 +120,7 @@ text-decoration:none;
 </div>
 
 <script>
+
 let menu=false;
 function toggleMenu(){
 let m=document.getElementById("sideMenu");
@@ -136,7 +137,84 @@ const url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTzcuYj91nTsIkmp86gpP
 
 let dados=[];
 
-// resto do JS continua igual...
+function reservado(v){return v && v.toLowerCase().includes("reservado")}
+
+function normalizar(txt){
+return (txt||"").toLowerCase()
+.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"")
+.replace(/[^a-z0-9 ]/g,"")
+.replace(/\\s+/g," ")
+.trim();
+}
+
+function chave(marca,modelo){
+let base = normalizar(marca+" "+modelo);
+base = base.replace(/\\b20\\d{2}\\b/g,"");
+return base;
+}
+
+function carregar(){
+Papa.parse(url,{
+download:true,
+complete:(res)=>{
+
+dados=res.data.slice(2).filter(r=>r[0]);
+
+let hojeStr=new Date().toLocaleDateString("pt-BR");
+
+let total=dados.length;
+let ret=0, hoje=0, sem=0, com=0;
+
+let tabela="";
+let carros={};
+
+dados.forEach(r=>{
+let tem=reservado(r[3]);
+
+if(r[7]) ret++;
+if(r[7]==hojeStr) hoje++;
+
+if(tem) com++; else sem++;
+
+carros[chave(r[1],r[2])] = (carros[chave(r[1],r[2])]||0)+1;
+
+tabela+=`<tr>
+<td>${r[0]}</td>
+<td>${(r[1]||"").toUpperCase()}</td>
+<td>${(r[2]||"").toUpperCase()}</td>
+<td>${tem?`<span style="color:#00ff88">${r[3]}</span>`:`<span style="color:#ff3b3b">SEM OS</span>`}</td>
+<td>${r[4]}</td>
+<td>${r[9]}</td>
+</tr>`;
+});
+
+document.getElementById("total").innerText=total;
+document.getElementById("ret").innerText=ret;
+document.getElementById("hoje").innerText=hoje;
+document.getElementById("sem").innerText=sem;
+document.getElementById("com").innerText=com;
+
+document.getElementById("tEstoque").innerHTML=tabela;
+
+let top = Object.entries(carros).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+let tabelaRank = "";
+top.forEach(r=>{
+tabelaRank += `<tr><td>${r[0].toUpperCase()}</td><td>${r[1]}</td></tr>`;
+});
+document.getElementById("rankingTabela").innerHTML = tabelaRank;
+
+new Chart(document.getElementById("grafico"),{
+type:"bar",
+data:{labels:top.map(x=>x[0].toUpperCase()),datasets:[{data:top.map(x=>x[1])}]}
+});
+
+}
+});
+}
+
+carregar();
+
 </script>
 
 </body>
