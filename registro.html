@@ -12,7 +12,7 @@ body{
   margin:0;
 }
 
-/* MENU */
+/* MENU IGUAL ESTOQUE */
 #sideMenu{
 position:fixed;
 top:0;
@@ -34,9 +34,12 @@ text-decoration:none;
 .menu-item:hover{background:#e30613;}
 .menu-item.active{background:#e30613;}
 
-/* HEADER FORÇADO */
+/* HEADER IGUAL ESTOQUE (FORÇADO) */
 header{
-position:relative;
+display:flex !important;
+align-items:center !important;
+justify-content:flex-start !important;
+gap:15px;
 padding:20px;
 border-bottom:2px solid red;
 }
@@ -80,6 +83,7 @@ font-weight:bold;
 
 <body>
 
+<!-- MENU -->
 <div id="sideMenu">
 <div style="display:flex;justify-content:space-between;align-items:center;padding:15px;">
 <span style="font-weight:bold;">Menu</span>
@@ -91,33 +95,10 @@ font-weight:bold;
 <a href="registro.html" class="menu-item active">Registro de Peça</a>
 </div>
 
+<!-- HEADER CORRETO -->
 <header>
-
-<button onclick="toggleMenu()" 
-style="
-position:absolute;
-left:20px;
-top:50%;
-transform:translateY(-50%);
-background:transparent;
-border:none;
-color:#fff;
-font-size:22px;
-cursor:pointer;
-">
-☰
-</button>
-
-<h2 style="
-margin:0;
-position:absolute;
-right:20px;
-top:50%;
-transform:translateY(-50%);
-">
-Registro de Peça
-</h2>
-
+<button onclick="toggleMenu()" style="background:transparent;border:none;color:#fff;font-size:22px;cursor:pointer;">☰</button>
+<h2 style="margin:0;">Registro de Peça</h2>
 </header>
 
 <div class="container">
