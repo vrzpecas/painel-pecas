@@ -15,29 +15,56 @@ header{padding:20px;border-bottom:2px solid #e30613;font-weight:600}
 .card{background:#121214;padding:15px;border-radius:12px;border:1px solid #222}
 .card h2{color:#e30613;margin:5px 0}
 .section{margin-top:25px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:10px;border-bottom:1px solid #222;text-align:left}
+th{color:#aaa}
 select,input{padding:8px;background:#18181b;color:#fff;border:1px solid #333;border-radius:8px}
 button{background:#18181b;border:1px solid #333;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
 button:hover{background:#e30613}
 .actions{margin-top:20px;display:flex;gap:10px}
 .actions button.active{background:#e30613;border-color:#e30613;}
 .hidden{display:none}
-canvas{background:#121214;padding:10px;border-radius:12px}
 
-#sideMenu{position:fixed;top:0;left:-250px;width:250px;height:100%;background:#0b0b0b;transition:0.3s;z-index:999;border-right:1px solid #222;padding-top:60px;}
-.menu-item{display:block;padding:15px;color:#fff;text-decoration:none;}
+.grid-cards{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+gap:15px;
+margin-top:15px;
+}
+
+.card-item{
+background:#121214;
+border:1px solid #222;
+border-radius:12px;
+padding:15px;
+transition:0.2s;
+}
+.card-item:hover{
+transform:translateY(-3px);
+border-color:#e30613;
+}
+
+#sideMenu{
+position:fixed;
+top:0;
+left:-250px;
+width:250px;
+height:100%;
+background:#0b0b0b;
+transition:0.3s;
+z-index:999;
+border-right:1px solid #222;
+padding-top:60px;
+}
+
+.menu-item{
+display:block;
+padding:15px;
+color:#fff;
+text-decoration:none;
+}
 .menu-item:hover{background:#e30613;}
 .menu-item.active{background:#e30613;}
-
-/* CARDS */
-.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:15px;margin-top:15px;}
-.card-item{background:#121214;border:1px solid #222;border-radius:12px;padding:15px;transition:0.2s;}
-.card-item:hover{transform:translateY(-3px);border-color:#e30613;}
-.card-title{font-size:14px;font-weight:bold;margin-bottom:5px;}
-.card-sub{font-size:12px;color:#aaa;margin-bottom:10px;}
-.card-row{font-size:12px;margin:3px 0;}
-.status{margin-top:8px;display:inline-block;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:bold;}
-.status.in{background:#0f2a1a;color:#00ff88;}
-.status.out{background:#2a0f0f;color:#ff4d4d;}
 </style>
 </head>
 
@@ -58,6 +85,8 @@ canvas{background:#121214;padding:10px;border-radius:12px}
 <h2>Estoque</h2>
 </header>
 
+<header>Dashboard Completo + Inteligência</header>
+
 <div class="container">
 
 <div class="cards">
@@ -77,25 +106,32 @@ canvas{background:#121214;padding:10px;border-radius:12px}
 <div id="estoque" class="section hidden">
 
 <!-- FILTROS -->
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:10px;">
 <select id="filtroOS" onchange="filtrarAvancado()"></select>
 <select id="filtroMarca" onchange="filtrarAvancado()"></select>
 <select id="filtroModelo" onchange="filtrarAvancado()"></select>
 <input id="filtroPeca" placeholder="Buscar peça..." oninput="filtrarAvancado()">
 </div>
 
-<div id="tEstoque" class="grid-cards"></div>
+<!-- TABELA ORIGINAL -->
+<table>
+<thead><tr><th>NUM</th><th>MARCA</th><th>MODELO</th><th>OS</th><th>PEÇA</th><th>RESP</th></tr></thead>
+<tbody id="tEstoque"></tbody>
+</table>
+
+<!-- CARDS NOVOS -->
+<div id="cardsEstoque" class="grid-cards"></div>
 
 </div>
 
 <div id="os" class="section hidden">
-<select id="osSelect" onchange="selecionarOS()"></select>
-<input id="osInput" oninput="digitarOS()">
+<select id="osSelect"></select>
+<input id="osInput">
 <table><tbody id="tOS"></tbody></table>
 </div>
 
 <div id="mov" class="section hidden">
-<select id="dataSelect" onchange="filtrarData()"></select>
+<select id="dataSelect"></select>
 <table><tbody id="tMov"></tbody></table>
 </div>
 
@@ -147,30 +183,42 @@ complete:(res)=>{
 dados=res.data.slice(2).filter(r=>r[0]);
 
 let tabela="";
+let cards="";
 let osSet=new Set(),marcaSet=new Set(),modeloSet=new Set(),pecas=new Set();
 
 dados.forEach(r=>{
 
-osSet.add(r[3]);marcaSet.add(r[1]);modeloSet.add(r[2]);pecas.add(r[4]);
-
+let tem=reservado(r[3]);
 let saiu = r[9] && r[9].trim() !== "";
 
-tabela+=`
+osSet.add(r[3]);marcaSet.add(r[1]);modeloSet.add(r[2]);pecas.add(r[4]);
+
+// tabela
+tabela+=`<tr>
+<td>${r[0]}</td>
+<td>${r[1]}</td>
+<td>${r[2]}</td>
+<td>${tem?r[3]:"SEM OS"}</td>
+<td>${r[4]}</td>
+<td>${r[9]||"-"}</td>
+</tr>`;
+
+// cards
+cards+=`
 <div class="card-item" data-text="${r.join(" ").toLowerCase()}">
-
-<div class="card-title">🔧 ${r[4]}</div>
-<div class="card-sub">${r[1]} • ${r[2]}</div>
-
-<div class="card-row">NUM: ${r[0]}</div>
-<div class="card-row">OS: ${r[3]||"SEM OS"}</div>
-<div class="card-row">RESP: ${r[9]||"-"}</div>
-
-<div class="status ${saiu?"out":"in"}">${saiu?"RETIRADO":"ESTOQUE"}</div>
-
+<div><b>🔧 ${r[4]}</b></div>
+<div style="font-size:12px;color:#aaa">${r[1]} • ${r[2]}</div>
+<div style="font-size:12px;">NUM: ${r[0]}</div>
+<div style="font-size:12px;">OS: ${r[3]||"SEM OS"}</div>
+<div style="font-size:12px;">RESP: ${r[9]||"-"}</div>
+<div style="font-size:10px;margin-top:6px;color:${saiu?"#ff4d4d":"#00ff88"}">
+${saiu?"RETIRADO":"EM ESTOQUE"}
+</div>
 </div>`;
 });
 
 document.getElementById("tEstoque").innerHTML=tabela;
+document.getElementById("cardsEstoque").innerHTML=cards;
 
 // filtros
 function fill(id,set){
@@ -183,6 +231,7 @@ fill("filtroOS",osSet);
 fill("filtroMarca",marcaSet);
 fill("filtroModelo",modeloSet);
 
+// autocomplete peça
 let dl=document.createElement("datalist");
 dl.id="listaPecas";
 [...pecas].forEach(p=>dl.innerHTML+=`<option value="${p}">`);
@@ -200,9 +249,18 @@ let marca=filtroMarca.value.toLowerCase();
 let modelo=filtroModelo.value.toLowerCase();
 let peca=filtroPeca.value.toLowerCase();
 
+document.querySelectorAll("#tEstoque tr").forEach(l=>{
+let t=l.innerText.toLowerCase();
+l.style.display =
+(!os||t.includes(os)) &&
+(!marca||t.includes(marca)) &&
+(!modelo||t.includes(modelo)) &&
+(!peca||t.includes(peca))
+? "" : "none";
+});
+
 document.querySelectorAll(".card-item").forEach(c=>{
 let t=c.dataset.text;
-
 c.style.display =
 (!os||t.includes(os)) &&
 (!marca||t.includes(marca)) &&
@@ -210,6 +268,7 @@ c.style.display =
 (!peca||t.includes(peca))
 ? "" : "none";
 });
+
 }
 
 carregar();
