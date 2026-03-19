@@ -213,11 +213,12 @@ document.querySelectorAll(".card-item").forEach(c=>{
 
 let texto = c.dataset.text;
 
-// pega OS do card
-let matchOS = texto.match(/os:\s*([^\s]+)/i);
-let osCard = matchOS ? limparOS(matchOS[1]).toLowerCase() : "";
+// 🔥 pega OS do card corretamente
+let match = texto.match(/os:\s*([^\n]+)/i);
+let osCard = match ? limparOS(match[1]).toLowerCase() : "";
 
-let condOS = !os || osCard === os;
+// 🔥 condição corrigida
+let condOS = !os || osCard.includes(os);
 
 c.style.display =
 condOS &&
