@@ -168,11 +168,13 @@ display:inline-block;
 
 function limparOS(os){
 if(!os) return "";
+
 return os.toString()
-.replace(/$begin:math:text$\.\*\?$end:math:text$/g,"")
-.replace(/reservado/gi,"")
-.trim()
-.toLowerCase();
+.toLowerCase()
+.replace(/\(.*?\)/g,"")      // remove qualquer ()
+.replace(/reservado/gi,"")   // remove palavra
+.replace(/[^0-9]/g,"")       // 🔥 deixa só número
+.trim();
 }
 
 let menu=false;
