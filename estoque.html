@@ -212,13 +212,10 @@ let peca = filtroPeca.value.toLowerCase();
 document.querySelectorAll(".card-item").forEach(c=>{
 
 let texto = c.dataset.text;
+let osCard = c.dataset.os;
 
-// 🔥 pega OS do card corretamente
-let match = texto.match(/os:\s*([^\n]+)/i);
-let osCard = match ? limparOS(match[1]).toLowerCase() : "";
-
-// 🔥 condição corrigida
-let condOS = !os || osCard.includes(os);
+// 🔥 comparação direta (agora funciona 100%)
+let condOS = !os || osCard === os;
 
 c.style.display =
 condOS &&
@@ -284,7 +281,10 @@ pecas.add(r[4]);
 
 // cards
 cards+=`
-<div class="card-item" data-text="${r.join(" ").toLowerCase()}">
+cards+=`
+<div class="card-item" 
+data-text="${r.join(" ").toLowerCase()}"
+data-os="${limparOS(r[3]).toLowerCase()}">
 
 <div><b>🔧 ${r[4]}</b></div>
 <div style="font-size:12px;color:#aaa">${r[1]} • ${r[2]}</div>
