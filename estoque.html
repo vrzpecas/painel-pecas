@@ -169,9 +169,10 @@ display:inline-block;
 function limparOS(os){
 if(!os) return "";
 return os.toString()
-.replace(/\(.*?\)/g,"") // remove (RESERVADO)
+.replace(/$begin:math:text$\.\*\?$end:math:text$/g,"")
 .replace(/reservado/gi,"")
-.trim();
+.trim()
+.toLowerCase();
 }
 
 let menu=false;
@@ -212,10 +213,9 @@ let peca = document.getElementById("filtroPeca").value.toLowerCase();
 document.querySelectorAll(".card-item").forEach(c=>{
 
 let texto = c.dataset.text;
-let osCard = c.dataset.os;
 
-// 🔥 COMPARAÇÃO CERTA (SEM LOWERCASE)
-let condOS = !os || osCard === os;
+// 🔥 ESSA LINHA RESOLVE TUDO
+let condOS = !os || limparOS(texto).includes(os);
 
 c.style.display =
 condOS &&
@@ -282,9 +282,8 @@ pecas.add(r[4]);
 // cards
 cards+=`
 cards+=`
-<div class="card-item" 
-data-text="${r.join(" ").toLowerCase()}"
-data-os="${limparOS(r[3])}">
+cards+=`
+<div class="card-item" data-text="${r.join(" ").toLowerCase()}">
 
 <div><b>🔧 ${r[4]}</b></div>
 <div style="font-size:12px;color:#aaa">${r[1]} • ${r[2]}</div>
