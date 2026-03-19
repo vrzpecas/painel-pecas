@@ -204,17 +204,17 @@ el.classList.remove("hidden");
 // 🔥 FILTRO
 function filtrarAvancado(){
 
-let os = limparOS(filtroOS.value).toLowerCase();
-let marca = filtroMarca.value.toLowerCase();
-let modelo = filtroModelo.value.toLowerCase();
-let peca = filtroPeca.value.toLowerCase();
+let os = limparOS(document.getElementById("filtroOS").value);
+let marca = document.getElementById("filtroMarca").value.toLowerCase();
+let modelo = document.getElementById("filtroModelo").value.toLowerCase();
+let peca = document.getElementById("filtroPeca").value.toLowerCase();
 
 document.querySelectorAll(".card-item").forEach(c=>{
 
 let texto = c.dataset.text;
 let osCard = c.dataset.os;
 
-// 🔥 comparação direta (agora funciona 100%)
+// 🔥 COMPARAÇÃO CERTA (SEM LOWERCASE)
 let condOS = !os || osCard === os;
 
 c.style.display =
@@ -284,7 +284,7 @@ cards+=`
 cards+=`
 <div class="card-item" 
 data-text="${r.join(" ").toLowerCase()}"
-data-os="${limparOS(r[3]).toLowerCase()}">
+data-os="${limparOS(r[3])}">
 
 <div><b>🔧 ${r[4]}</b></div>
 <div style="font-size:12px;color:#aaa">${r[1]} • ${r[2]}</div>
