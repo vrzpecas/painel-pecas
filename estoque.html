@@ -282,7 +282,7 @@ cards+=`
 <div>NUM: ${r[0]}</div>
 <div>OS: ${
 saiu 
-? (r[8] || "SEM OS") 
+? (r[8] && r[8].trim() !== "" ? r[8] : "SEM OS")
 : (r[3] && r[3].toLowerCase().includes("reservado") 
     ? limparOS(r[3]) 
     : "SEM OS")
