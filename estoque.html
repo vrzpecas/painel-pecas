@@ -174,10 +174,23 @@ m.style.left=menu?"0":"-250px";
 }
 
 function mostrar(id){
+
+let el = document.getElementById(id);
+
+// 👉 se já está aberto, fecha
+if(!el.classList.contains("hidden")){
+el.classList.add("hidden");
+return;
+}
+
+// 👉 fecha todos
 ["estoque","os","mov"].forEach(x=>{
 document.getElementById(x).classList.add("hidden");
 });
-document.getElementById(id).classList.remove("hidden");
+
+// 👉 abre o clicado
+el.classList.remove("hidden");
+
 }
 
 // 🔥 FILTRO
@@ -285,9 +298,11 @@ el.innerHTML="<option value=''>Todos</option>";
 let arr=[...set].filter(v=>v && v.trim() !== "");
 
 if(id==="filtroOS"){
-arr.sort((a,b)=>Number(b)-Number(a)); // decrescente
-}else{
-arr.sort((a,b)=>a.localeCompare(b)); // alfabético
+arr.sort((a,b)=>{
+let numA = parseInt(a) || 0;
+let numB = parseInt(b) || 0;
+return numB - numA;
+});
 }
 
 arr.forEach(v=>{
