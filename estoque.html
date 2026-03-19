@@ -174,10 +174,23 @@ m.style.left=menu?"0":"-250px";
 }
 
 function mostrar(id){
+
+let el = document.getElementById(id);
+
+// 👉 se já está aberto, fecha
+if(!el.classList.contains("hidden")){
+el.classList.add("hidden");
+return;
+}
+
+// 👉 fecha todos
 ["estoque","os","mov"].forEach(x=>{
 document.getElementById(x).classList.add("hidden");
 });
-document.getElementById(id).classList.remove("hidden");
+
+// 👉 abre o clicado
+el.classList.remove("hidden");
+
 }
 
 // 🔥 FILTRO
