@@ -32,8 +32,30 @@ function filtrarMovimento(){
 
     if(sameDay(dataSolic,dataFiltro)){
       solicitadas++;
-      tabela.innerHTML+=`<tr><td>${r["OS"]}</td><td>${r["DESCRIÇÃO DA PEÇA"]}</td><td>${r["FORNECEDOR"]}</td><td>Solicitada</td></tr>`;
-    }
+      if(sameDay(dataSolic,dataFiltro)){
+solicitadas++;
+tabela.innerHTML+=criarCard(r,"Solicitada","status-solicitada");
+}
+
+if(sameDay(dataCompra,dataFiltro)){
+compradas++;
+
+let valorNum = parseFloat((r["VALOR"] || "0")
+.toString()
+.replace("R$","")
+.replace(/\./g,"")
+.replace(",","."));
+
+if(!isNaN(valorNum)) valorHoje += valorNum;
+
+tabela.innerHTML+=criarCard(r,"Comprada","status-comprada");
+}
+
+if(sameDay(dataEntrega,dataFiltro)){
+entregues++;
+tabela.innerHTML+=criarCard(r,"Entregue","status-entregue");
+}
+    
     if(sameDay(dataCompra,dataFiltro)){
       compradas++;
 
@@ -45,12 +67,6 @@ function filtrarMovimento(){
 
       if(!isNaN(valorNum)) valorHoje += valorNum;
 
-      tabela.innerHTML+=`<tr><td>${r["OS"]}</td><td>${r["DESCRIÇÃO DA PEÇA"]}</td><td>${r["FORNECEDOR"]}</td><td>Comprada</td></tr>`;
-    }
-    if(sameDay(dataEntrega,dataFiltro)){
-      entregues++;
-      tabela.innerHTML+=`<tr><td>${r["OS"]}</td><td>${r["DESCRIÇÃO DA PEÇA"]}</td><td>${r["FORNECEDOR"]}</td><td>Entregue</td></tr>`;
-    }
   });
 
   document.getElementById("solicitadasHoje").innerText=solicitadas;
