@@ -388,7 +388,7 @@ tabelaRank += `<tr><td>${r[0].toUpperCase()}</td><td>${r[1]}</td></tr>`;
 });
 document.getElementById("rankingTabela").innerHTML = tabelaRank;
 
-if(window.graficoChart){
+if(window.graficoChart && typeof window.graficoChart.destroy === "function"){
   window.graficoChart.destroy();
 }
 
