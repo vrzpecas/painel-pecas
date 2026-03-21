@@ -596,12 +596,42 @@ if(hojeZ > prazoEntrega){
 atrasadas++;
 let diff=Math.floor((hoje-prazoEntrega)/(1000*60*60*24));
 
-tA.innerHTML+=criarCard(r,"ATRASADA","status-solicitada");
+let dataCompraFormatada = formatar(dataCompra);
+
+tA.innerHTML += `
+<div class="os-card">
+  <div class="os-top">
+    <span class="os-id">OS ${r["OS"]}</span>
+    <span class="status status-solicitada">ATRASADA (${diff} dias)</span>
+  </div>
+
+  <div class="os-body">
+    <div><b>Peça:</b> ${r["DESCRIÇÃO DA PEÇA"]}</div>
+    <div><b>Fornecedor:</b> ${r["FORNECEDOR"]}</div>
+    <div><b>Compra:</b> ${dataCompraFormatada}</div>
+  </div>
+</div>
+`;
 
 }else{
 
 prazo++;
-tP.innerHTML+=criarCard(r,"NO PRAZO","status-entregue");
+let dataCompraFormatada = formatar(dataCompra);
+
+tP.innerHTML += `
+<div class="os-card">
+  <div class="os-top">
+    <span class="os-id">OS ${r["OS"]}</span>
+    <span class="status status-entregue">NO PRAZO</span>
+  </div>
+
+  <div class="os-body">
+    <div><b>Peça:</b> ${r["DESCRIÇÃO DA PEÇA"]}</div>
+    <div><b>Fornecedor:</b> ${r["FORNECEDOR"]}</div>
+    <div><b>Compra:</b> ${dataCompraFormatada}</div>
+  </div>
+</div>
+`;
 
 }
 
