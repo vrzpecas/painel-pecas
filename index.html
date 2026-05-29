@@ -37,6 +37,7 @@
 </head>
 
 <body>
+    <!-- MENU LATERAL -->
     <div id="sideMenu" style="position:fixed; top:0; left:-250px; width:250px; height:100%; background:#0b0b0b; transition:0.3s; z-index:999;">
         <div style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
             <span style="font-weight:bold; color:#fff;">Menu</span>
@@ -47,12 +48,14 @@
         <a href="registro.html" class="menu-item">Registro de Peça</a>
     </div>
 
+    <!-- HEADER -->
     <header style="display:flex; align-items:center; gap:15px;">
         <button onclick="toggleMenu()" style="background:transparent; border:none; color:#fff; font-size:22px; cursor:pointer;">☰</button>
         Painel de Controle de Peças
     </header>
 
     <div class="container">
+        <!-- INDICADORES -->
         <div class="cards">
             <div class="card"><span>Total peças</span><h2 id="total">0</h2></div>
             <div class="card"><span>Atrasadas</span><h2 id="atrasadas">0</h2></div>
@@ -64,6 +67,7 @@
             </div>
         </div>
 
+        <!-- ABAS -->
         <div class="tabs">
             <button onclick="mostrar('hojeTab')">Movimento hoje</button>
             <button onclick="mostrar('atrasadasTab')">Atrasadas</button>
@@ -72,6 +76,7 @@
             <button onclick="mostrar('osTab')">Buscar OS</button>
         </div>
 
+        <!-- CONTEÚDO DAS ABAS -->
         <div id="hojeTab" class="section">
             <h3>Movimento do dia</h3>
             <div style="margin:10px 0 15px 0; display:flex; gap:10px; align-items:center;">
@@ -99,12 +104,10 @@
         </div>
     </div>
 
+    <!-- LOGICA DO SISTEMA -->
     <script>
         const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXT05p1mxD9mFsRFqzeG4ebXF10jVJra0AncChPKXz6UcrtpYFMZ31qMpcSCKnvQ/pub?gid=1419345505&single=true&output=csv";
-        const estoqueURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXT05p1mxD9mFsRFqzeG4ebXF10jVJra0AncChPKXz6UcrtpYFMZ31qMpcSCKnvQ/pub?gid=1419345505&single=true&output=csv";
-        
-        let dados = [];
-        let dadosEstoque = []; // Guarda a base de dados do estoque em memória
+        let dados = [], dadosEstoque = [];
 
         function mostrar(id) {
             document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
@@ -126,31 +129,61 @@
             return null;
         }
 
-        function sameDay(a, b) {
-            return a && b && a.getDate() == b.getDate() && a.getMonth() == b.getMonth() && a.getFullYear() == b.getFullYear();
-        }
-
+        function sameDay(a, b) { return a && b && a.getDate() == b.getDate() && a.getMonth() == b.getMonth() && a.getFullYear() == b.getFullYear(); }
         function formatar(d) { return d ? d.toLocaleDateString("pt-BR") : "-"; }
 
-        // Função auxiliar para gerar a tag visual de disponibilidade física do estoque
-        function obterBadgeEstoque(temNoEstoque) {
-            return temNoEstoque 
-                ? `<span style="background: #16a34a; color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 700; margin-left: 8px; display: inline-block; vertical-align: middle;">✓ ESTOQUE</span>`
-                : `<span style="background: #b91c1c; color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 700; margin-left: 8px; display: inline-block; vertical-align: middle;">✕ FALTA</span>`;
+        // Nova verificação refinada e inteligente de estoque com localização física
+        function verificarEstoqueCompleto(nomePecaBuscada, modeloCarroBuscado) {
+            if (!nomePecaBuscada || !modeloCarroBuscado) return { disponivel: false };
+
+            let pecaBusca = nomePecaBuscada.toUpperCase().trim();
+            let modBusca = modeloCarroBuscado.toUpperCase().trim();
+
+            // Procura um item correspondente na planilha de estoque que não tenha saído
+            let match = dadosEstoque.find(e => {
+                let pEst = (e["PEÇA"] || e["DESCRIÇÃO DA PEÇA"] || "").toUpperCase().trim();
+                let mEst = (e["MODELO"] || e["VEÍCULO"] || "").toUpperCase().trim();
+                let foiRetirada = (e["DATA RETIRADA"] || e["OS RECEPTOR"] || "").toString().trim() !== "";
+                
+                return mEst === modBusca && pEst.includes(pecaBusca) && !foiRetirada;
+            });
+
+            if (match) {
+                // Captura a localização da coluna NUMERAÇÃO ou NÚMERO
+                return { disponivel: true, local: match["NUMERAÇÃO"] || match["NÚMERO"] || "S/L" };
+            }
+            return { disponivel: false };
         }
 
-        // Lógica centralizada para validar se o item buscado consta disponível na planilha de estoque
-        function verificarDisponibilidadeEstoque(nomePeca, modeloCarro) {
-            if(!nomePeca) return false;
-            return dadosEstoque.some(e => {
-                let pEstoque = (e["PEÇA"] || e["DESCRIÇÃO DA PEÇA"] || "").toUpperCase().trim();
-                let mEstoque = (e["MODELO"] || e["VEÍCULO"] || "").toUpperCase().trim();
-                let foiRetirada = e["DATA RETIRADA"] || e["DATA DE RETIRADA"] || e["OS RECEPTOR"];
-                
-                return pEstoque === nomePeca.toUpperCase().trim() && 
-                       mEstoque === modeloCarro.toUpperCase().trim() && 
-                       !foiRetirada;
-            });
+        function obterBadgeEstoque(res) {
+            if (res.disponivel) {
+                return `<span style="background: #16a34a; color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 700; margin-left: 8px;">✓ ESTOQUE (${res.local})</span>`;
+            }
+            return `<span style="background: #b91c1c; color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 700; margin-left: 8px;">✕ FALTA</span>`;
+        }
+
+        // Função universal para renderizar os cards agrupados por veículo em qualquer aba do painel
+        function criarCardAgrupadoGeral(osId, modelo, itens, corBorda) {
+            let itensHtml = itens.map(i => {
+                let badge = obterBadgeEstoque(verificarEstoqueCompleto(i.descricao, modelo));
+                return `
+                <div style="margin-bottom: 10px; border-bottom: 1px solid #27272a; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-size: 14px; font-weight: 500;"><b>Peça:</b> ${i.descricao} ${badge}</div>
+                    <div style="font-size: 12px; color: #a1a1aa;">${i.detalhes || ""}</div>
+                  </div>
+                  <span class="status ${i.classe || 'status-solicitada'}">${i.status}</span>
+                </div>`;
+            }).join('');
+
+            return `
+            <div class="os-card">
+              <div class="os-top" style="border-bottom: 2px solid ${corBorda}; margin-bottom: 12px; padding-bottom: 6px;">
+                <span class="os-id">OS ${osId} <span class="os-modelo">${modelo}</span></span>
+                <span style="font-size: 12px; color: #a1a1aa;">${itens.length} Peça(s)</span>
+              </div>
+              <div class="os-body">${itensHtml}</div>
+            </div>`;
         }
 
         function gerarRankingSolicitantes(dados) {
@@ -174,187 +207,73 @@
             if (el) el.innerHTML = html;
         }
 
-        function criarCardIndividual(r, status, classe) {
-            let temEstoque = verificarDisponibilidadeEstoque(r["DESCRIÇÃO DA PEÇA"] || r["PEÇA"], r["MODELO"] || r["VEÍCULO"]);
-            return `
-            <div class="os-card">
-              <div class="os-top">
-                <span class="os-id">OS ${r["OS"]} <span class="os-modelo">${r["MODELO"] || r["VEÍCULO"] || ""}</span></span>
-                <span class="status ${classe}">${status}</span>
-              </div>
-              <div class="os-body">
-                <div><b>Peça:</b> ${r["DESCRIÇÃO DA PEÇA"] || r["PEÇA"]} ${obterBadgeEstoque(temEstoque)}</div>
-                <div><b>Fornecedor:</b> ${r["FORNECEDOR"] || "-"}</div>
-              </div>
-            </div>`;
-        }
-
-        function criarCardAgrupado(osId, modelo, itens, corBorda) {
-            let itensHtml = itens.map(i => `
-                <div style="margin-bottom: 10px; border-bottom: 1px solid #27272a; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                  <div>
-                    <div style="font-size: 14px; font-weight: 500;"><b>Peça:</b> ${i.descricao} ${obterBadgeEstoque(i.emEstoque)}</div>
-                    <div style="font-size: 12px; color: #a1a1aa;">${i.detalhes || ""}</div>
-                  </div>
-                  <span class="status ${i.classe}">${i.status}</span>
-                </div>
-            `).join('');
-
-            return `
-            <div class="os-card">
-              <div class="os-top" style="border-bottom: 2px solid ${corBorda}; margin-bottom: 12px; padding-bottom: 6px;">
-                <span class="os-id">OS ${osId} <span class="os-modelo">${modelo}</span></span>
-                <span style="font-size: 12px; color: #a1a1aa;">${itens.length} Peça(s)</span>
-              </div>
-              <div class="os-body">${itensHtml}</div>
-            </div>`;
-        }
-
-        function criarCardAgrupadoAtrasadas(osId, modelo, itens, corBorda) {
-            let itensHtml = itens.map(i => `
-                <div style="margin-bottom: 10px; border-bottom: 1px solid #27272a; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                  <div>
-                    <div style="font-size: 14px; font-weight: 500;"><b>Peça:</b> ${i.descricao} ${obterBadgeEstoque(i.emEstoque)}</div>
-                    <div style="font-size: 12px; color: #a1a1aa;">${i.detalhes || ""}</div>
-                  </div>
-                  <span class="status status-solicitada">ATRASADA (${i.diff} dias)</span>
-                </div>
-            `).join('');
-
-            return `
-            <div class="os-card">
-              <div class="os-top" style="border-bottom: 2px solid ${corBorda}; margin-bottom: 12px; padding-bottom: 6px;">
-                <span class="os-id">OS ${osId} <span class="os-modelo">${modelo}</span></span>
-                <span style="font-size: 12px; color: #a1a1aa;">${itens.length} Peça(s) em Atraso</span>
-              </div>
-              <div class="os-body">${itensHtml}</div>
-            </div>`;
-        }
-
-        function criarCardAgrupadoPrazo(osId, modelo, itens, corBorda) {
-            let itensHtml = itens.map(i => `
-                <div style="margin-bottom: 10px; border-bottom: 1px solid #27272a; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                  <div>
-                    <div style="font-size: 14px; font-weight: 500;"><b>Peça:</b> ${i.descricao} ${obterBadgeEstoque(i.emEstoque)}</div>
-                    <div style="font-size: 12px; color: #a1a1aa;">${i.detalhes || ""}</div>
-                  </div>
-                  <span class="status status-entregue">NO PRAZO</span>
-                </div>
-            `).join('');
-
-            return `
-            <div class="os-card">
-              <div class="os-top" style="border-bottom: 2px solid ${corBorda}; margin-bottom: 12px; padding-bottom: 6px;">
-                <span class="os-id">OS ${osId} <span class="os-modelo">${modelo}</span></span>
-                <span style="font-size: 12px; color: #a1a1aa;">${itens.length} Peça(s) no Prazo</span>
-              </div>
-              <div class="os-body">${itensHtml}</div>
-            </div>`;
-        }
-
-        function criarCardAgrupadoNao(osId, modelo, itens, corBorda) {
-            let itensHtml = itens.map(i => `
-                <div style="margin-bottom: 10px; border-bottom: 1px solid #27272a; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                  <div>
-                    <div style="font-size: 14px; font-weight: 500;"><b>Peça:</b> ${i.descricao} ${obterBadgeEstoque(i.emEstoque)}</div>
-                    <div style="font-size: 12px; color: #a1a1aa;">${i.detalhes || ""}</div>
-                  </div>
-                  <span class="status status-comprada">COTAÇÃO</span>
-                </div>
-            `).join('');
-
-            return `
-            <div class="os-card">
-              <div class="os-top" style="border-bottom: 2px solid ${corBorda}; margin-bottom: 12px; padding-bottom: 6px;">
-                <span class="os-id">OS ${osId} <span class="os-modelo">${modelo}</span></span>
-                <span style="font-size: 12px; color: #a1a1aa;">${itens.length} Peça(s) para Cotar</span>
-              </div>
-              <div class="os-body">${itensHtml}</div>
-            </div>`;
-        }
-
         function carregar() {
-            // Sincronização Encadeada: Baixa a base de estoque primeiro, depois processa o fluxo
-            Papa.parse(estoqueURL + "&t=" + new Date().getTime(), {
+            Papa.parse(csvURL + "&t=" + new Date().getTime(), {
                 download: true, header: true, skipEmptyLines: true,
-                complete: function(resEstoque) {
-                    dadosEstoque = resEstoque.data;
+                complete: function(res) {
+                    dados = res.data;
+                    dadosEstoque = res.data; // Mapeia a base local para validação cruzada instantânea
+                    
+                    let hoje = new Date();
+                    let sH = 0, cH = 0, eH = 0, vH = 0, atr = 0, prz = 0, ent = 0;
+                    const tH = document.getElementById("tHoje"), tA = document.getElementById("tAtrasadas"), tP = document.getElementById("tPrazo"), tN = document.getElementById("tNao");
+                    tH.innerHTML = ""; tA.innerHTML = ""; tP.innerHTML = ""; tN.innerHTML = "";
 
-                    Papa.parse(csvURL + "&t=" + new Date().getTime(), {
-                        download: true, header: true, skipEmptyLines: true,
-                        complete: function(res) {
-                            dados = res.data;
-                            let hoje = new Date();
-                            let sH = 0, cH = 0, eH = 0, vH = 0, atr = 0, prz = 0, ent = 0;
+                    let gH = {}, gA = {}, gP = {}, gN = {};
 
-                            const tH = document.getElementById("tHoje"), tA = document.getElementById("tAtrasadas"), tP = document.getElementById("tPrazo"), tN = document.getElementById("tNao");
-                            tH.innerHTML = ""; tA.innerHTML = ""; tP.innerHTML = ""; tN.innerHTML = "";
+                    dados.forEach(r => {
+                        let os = r["OS"] || "S/N", mod = r["MODELO"] || r["VEÍCULO"] || "N/A";
+                        let dS = parseBRDate(r["DATA SOLICITAÇÃO"] || r["DATA DE SOLICITAÇÃO"]), dC = parseBRDate(r["DATA DA COMPRA"]), dE = parseBRDate(r["DATA DE ENTREGA"]);
+                        let pT = ""; for(let k in r){ if(k.toUpperCase().includes("PRAZO")) pT = r[k]; }
+                        let pE = parseBRDate(pT), v = (r["VALOR"] || "").toLowerCase();
 
-                            let gH = {}, gA = {}, gP = {}, gN = {};
+                        // Aba: Movimento Hoje
+                        if(sameDay(dS, hoje) || sameDay(dC, hoje) || sameDay(dE, hoje)){
+                            let st = "Solicitada", cl = "status-solicitada";
+                            if(sameDay(dS, hoje)) sH++;
+                            if(sameDay(dC, hoje)){ cH++; st="Comprada"; cl="status-comprada"; vH += parseFloat(r["VALOR"]?.toString().replace("R$","").replace(/\./g,"").replace(",",".") || 0); }
+                            if(sameDay(dE, hoje)){ eH++; st="Entregue"; cl="status-entregue"; }
+                            if(!gH[os]) gH[os] = { m: mod, i: [] };
+                            gH[os].i.push({ descricao: r["DESCRIÇÃO DA PEÇA"], status: st, classe: cl, detalhes: "Forn: " + (r["FORNECEDOR"] || "-") });
+                        }
 
-                            dados.forEach(r => {
-                                let osId = r["OS"] || "S/N", mod = r["MODELO"] || r["VEÍCULO"] || "Modelo não informado";
-                                let dS = parseBRDate(r["DATA SOLICITAÇÃO"] || r["DATA DE SOLICITAÇÃO"]);
-                                let dC = parseBRDate(r["DATA DA COMPRA"]);
-                                let dE = parseBRDate(r["DATA DE ENTREGA"]);
-                                let pT = ""; for(let k in r){ if(k.toUpperCase().includes("PRAZO")) pT = r[k]; }
-                                let pE = parseBRDate(pT);
-                                let v = (r["VALOR"] || "").toLowerCase();
+                        // Status Geral (Contadores e Prazos)
+                        if(dE) ent++;
+                        else if(pE){
+                            let hZ = new Date(); hZ.setHours(0,0,0,0); pE.setHours(0,0,0,0);
+                            if(hZ > pE){
+                                atr++; if(!gA[os]) gA[os] = { m: mod, i: [] };
+                                gA[os].i.push({ descricao: r["DESCRIÇÃO DA PEÇA"], status: "ATRASADA", classe: "status-solicitada", detalhes: `Compra: ${formatar(dC)} | Atraso: ${Math.floor((hoje-pE)/(1000*60*60*24))} dias` });
+                            } else {
+                                prz++; if(!gP[os]) gP[os] = { m: mod, i: [] };
+                                gP[os].i.push({ descricao: r["DESCRIÇÃO DA PEÇA"], status: "NO PRAZO", classe: "status-entregue", detalhes: `Compra: ${formatar(dC)} | Prazo: ${formatar(pE)}` });
+                            }
+                        }
 
-                                // Validação de Estoque
-                                let emEstoque = verificarDisponibilidadeEstoque(r["DESCRIÇÃO DA PEÇA"] || r["PEÇA"], mod);
-
-                                // Hoje
-                                let mudou = false, stI = "Solicitada", clI = "status-solicitada";
-                                if(sameDay(dS, hoje)){ sH++; mudou = true; }
-                                if(sameDay(dC, hoje)){ 
-                                    cH++; mudou = true; stI = "Comprada"; clI = "status-comprada"; 
-                                    let vN = parseFloat(r["VALOR"]?.toString().replace("R$","").replace(/\./g,"").replace(",",".") || 0);
-                                    if(!isNaN(vN)) vH += vN;
-                                }
-                                if(sameDay(dE, hoje)){ eH++; mudou = true; stI = "Entregue"; clI = "status-entregue"; }
-                                
-                                if(mudou){
-                                    if(!gH[osId]) gH[osId] = { m: mod, i: [] };
-                                    gH[osId].i.push({ descricao: r["DESCRIÇÃO DA PEÇA"], status: stI, classe: clI, emEstoque: emEstoque, detalhes: "Fornecedor: " + (r["FORNECEDOR"] || "-") });
-                                }
-
-                                // Status Geral
-                                if(dE) ent++;
-                                else if(pE){
-                                    let hZ = new Date(); hZ.setHours(0,0,0,0); pE.setHours(0,0,0,0);
-                                    if(hZ > pE){
-                                        atr++; if(!gA[osId]) gA[osId] = { m: mod, i: [] };
-                                        gA[osId].i.push({ descricao: r["DESCRIÇÃO DA PEÇA"], emEstoque: emEstoque, detalhes: `Compra: ${formatar(dC)} | Atraso: ${Math.floor((hoje-pE)/(1000*60*60*24))} dias` });
-                                    } else {
-                                        prz++; if(!gP[osId]) gP[osId] = { m: mod, i: [] };
-                                        gP[osId].i.push({ descricao: r["DESCRIÇÃO DA PEÇA"], emEstoque: emEstoque, detalhes: `Compra: ${formatar(dC)} | Prazo: ${formatar(pE)}` });
-                                    }
-                                }
-
-                                if(!v || v.includes("cot")){
-                                    if(!gN[osId]) gN[osId] = { m: mod, i: [] };
-                                    gN[osId].i.push({ descricao: r["DESCRIÇÃO DA PEÇA"] || r["PEÇA"], emEstoque: emEstoque, detalhes: "Fornecedor: " + (r["FORNECEDOR"] || "-") });
-                                }
-                            });
-
-                            for(let os in gH) tH.innerHTML += criarCardAgrupado(os, gH[os].m, gH[os].i, "#e30613");
-                            for(let os in gA) tA.innerHTML += criarCardAgrupadoAtrasadas(os, gA[os].m, gA[os].i, "#6b7280");
-                            for(let os in gP) tP.innerHTML += criarCardAgrupadoPrazo(os, gP[os].m, gP[os].i, "#16a34a");
-                            for(let os in gN) tN.innerHTML += criarCardAgrupadoNao(os, gN[os].m, gN[os].i, "#2563eb");
-
-                            document.getElementById("total").innerText = dados.length;
-                            document.getElementById("atrasadas").innerText = atr;
-                            document.getElementById("prazo").innerText = prz;
-                            document.getElementById("entregues").innerText = ent;
-                            document.getElementById("solicitadasHoje").innerText = sH;
-                            document.getElementById("compradasHoje").innerText = cH;
-                            document.getElementById("entreguesHoje").innerText = eH;
-                            document.getElementById("valorHoje").innerText = vH.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-                            popularOS();
-                            setTimeout(() => gerarRankingSolicitantes(dados), 0);
+                        // Aba: Não Solicitadas / Em Cotação
+                        if(!v || v.includes("cot")){
+                            if(!gN[os]) gN[os] = { m: mod, i: [] };
+                            gN[os].i.push({ descricao: r["DESCRIÇÃO DA PEÇA"] || r["PEÇA"], status: "COTAÇÃO", classe: "status-comprada", detalhes: "Forn: " + (r["FORNECEDOR"] || "-") });
                         }
                     });
+
+                    // Injeção visual limpa dos cards estruturados por carro
+                    for(let os in gH) tH.innerHTML += criarCardAgrupadoGeral(os, gH[os].m, gH[os].i, "#e30613");
+                    for(let os in gA) tA.innerHTML += criarCardAgrupadoGeral(os, gA[os].m, gA[os].i, "#6b7280");
+                    for(let os in gP) tP.innerHTML += criarCardAgrupadoGeral(os, gP[os].m, gP[os].i, "#16a34a");
+                    for(let os in gN) tN.innerHTML += criarCardAgrupadoGeral(os, gN[os].m, gN[os].i, "#2563eb");
+
+                    // Atualiza painel numérico do topo
+                    document.getElementById("total").innerText = dados.length;
+                    document.getElementById("atrasadas").innerText = atr;
+                    document.getElementById("prazo").innerText = prz;
+                    document.getElementById("entregues").innerText = ent;
+                    document.getElementById("solicitadasHoje").innerText = sH;
+                    document.getElementById("compradasHoje").innerText = cH;
+                    document.getElementById("entreguesHoje").innerText = eH;
+                    document.getElementById("valorHoje").innerText = vH.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+                    popularOS();
+                    setTimeout(() => gerarRankingSolicitantes(dados), 0);
                 }
             });
         }
@@ -368,15 +287,14 @@
         }
 
         function buscarOS() {
-            let os = document.getElementById("osSelect").value;
-            let t = document.getElementById("tOS"); t.innerHTML = ""; if(!os) return;
+            let os = document.getElementById("osSelect").value, t = document.getElementById("tOS"); t.innerHTML = ""; if(!os) return;
             dados.forEach(r => {
                 if(r["OS"] == os){
                     let pT = ""; for(let k in r){ if(k.toUpperCase().includes("PRAZO")) pT = r[k]; }
                     let pE = parseBRDate(pT), dE = parseBRDate(r["DATA DE ENTREGA"]), st = "NO PRAZO", cl = "status-entregue";
-                    if(dE) st = "ENTREGUE";
-                    else if(pE && pE < new Date()) { st = "ATRASADO"; cl = "status-solicitada"; }
-                    t.innerHTML += criarCardIndividual(r, st, cl);
+                    if(dE) st = "ENTREGUE"; else if(pE && pE < new Date()) { st = "ATRASADO"; cl = "status-solicitada"; }
+                    let b = obterBadgeEstoque(verificarEstoqueCompleto(r["DESCRIÇÃO DA PEÇA"] || r["PEÇA"], r["MODELO"] || r["VEÍCULO"]));
+                    t.innerHTML += `<div class="os-card"><div class="os-top"><span class="os-id">OS ${os} <span class="os-modelo">${r["MODELO"] || r["VEÍCULO"] || ""}</span></span><span class="status ${cl}">${st}</span></div><div class="os-body"><b>Peça:</b> ${r["DESCRIÇÃO DA PEÇA"] || r["PEÇA"]} ${b}</div></div>`;
                 }
             });
         }
@@ -397,13 +315,12 @@
                 
                 if(mudou){
                     let osId = r["OS"] || "S/N", mod = r["MODELO"] || r["VEÍCULO"] || "Modelo não informado";
-                    let emEstoque = verificarDisponibilidadeEstoque(r["DESCRIÇÃO DA PEÇA"] || r["PEÇA"], mod);
                     if(!gF[osId]) gF[osId] = { m: mod, i: [] };
-                    gF[osId].i.push({ descricao: r["DESCRIÇÃO DA PEÇA"], status: stI, classe: clI, emEstoque: emEstoque, detalhes: "Fornecedor: " + (r["FORNECEDOR"] || "-") });
+                    gF[osId].i.push({ descricao: r["DESCRIÇÃO DA PEÇA"], status: stI, classe: clI, detalhes: "Forn: " + (r["FORNECEDOR"] || "-") });
                 }
             });
 
-            for(let os in gF) t.innerHTML += criarCardAgrupado(os, gF[os].m, gF[os].i, "#e30613");
+            for(let os in gF) t.innerHTML += criarCardAgrupadoGeral(os, gF[os].m, gF[os].i, "#e30613");
             document.getElementById("solicitadasHoje").innerText = sH; document.getElementById("compradasHoje").innerText = cH;
             document.getElementById("entreguesHoje").innerText = eH; document.getElementById("valorHoje").innerText = vH.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
         }
