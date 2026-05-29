@@ -74,27 +74,25 @@
             <h3>Movimento do dia</h3>
             <div id="tHoje" class="os-container"></div>
         </div>
-
-        <div id="atrasadasTab" class="section hidden"><h3>Peças atrasadas</h3><div id="tAtrasadas" class="os-container"></div></div>
-        <div id="prazoTab" class="section hidden"><h3>Peças dentro do prazo</h3><div id="tPrazo" class="os-container"></div></div>
-        <div id="naoTab" class="section hidden"><h3>Peças não solicitadas / em cotação</h3><div id="tNao" class="os-container"></div></div>
-
+        <div id="atrasadasTab" class="section hidden"><h3>Atrasadas</h3><div id="tAtrasadas" class="os-container"></div></div>
+        <div id="prazoTab" class="section hidden"><h3>No Prazo</h3><div id="tPrazo" class="os-container"></div></div>
+        <div id="naoTab" class="section hidden"><h3>Cotação</h3><div id="tNao" class="os-container"></div></div>
         <div id="osTab" class="section hidden">
             <h3>Buscar OS</h3>
-            <select id="osSelect" onchange="buscarOS()" style="padding:8px; background:#0f0f10; color:#fff; border:1px solid #27272a; border-radius:8px; width: 100%; max-width: 300px; margin-bottom: 15px;"></select>
+            <select id="osSelect" onchange="buscarOS()" style="padding:8px; background:#0f0f10; color:#fff; border:1px solid #27272a; border-radius:8px; width:100%; max-width:300px; margin-bottom:15px;"></select>
             <div id="tOS" class="os-container"></div>
         </div>
     </div>
 
     <script>
-        // ATENÇÃO: Verifique se os GIDs (final do link) são diferentes para cada aba!
-        const solicitacoesURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXT05p1mxD9mFsRFqzeG4ebXF10jVJra0AncChPKXz6UcrtpYFMZ31qMpcSCKnvQ/pub?gid=1419345505&single=true&output=csv";
+        // Link principal da sua planilha
+        const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXT05p1mxD9mFsRFqzeG4ebXF10jVJra0AncChPKXz6UcrtpYFMZ31qMpcSCKnvQ/pub?single=true&output=csv";
         
-        // COLOQUE ABAIXO O LINK DA SUA ABA DE ESTOQUE (Verifique o GID no Google Sheets)
-        const estoqueURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQXT05p1mxD9mFsRFqzeG4ebXF10jVJra0AncChPKXz6UcrtpYFMZ31qMpcSCKnvQ/pub?gid=COLOCAR_AQUI_O_GID_DA_ABA_ESTOQUE&single=true&output=csv";
+        // Se você tiver o GID do estoque, mude o final do link abaixo (gid=1419345505)
+        const solicitacoesURL = BASE_URL + "&gid=1419345505";
+        const estoqueURL = BASE_URL + "&gid=1419345505"; 
 
-        let dadosSolicitacoes = [];
-        let dadosEstoque = [];
+        let dadosSolicitacoes = [], dadosEstoque = [];
 
         function mostrar(id) {
             document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
@@ -112,23 +110,19 @@
 
         function sameDay(a, b) { return a && b && a.getDate() == b.getDate() && a.getMonth() == b.getMonth() && a.getFullYear() == b.getFullYear(); }
 
-        // BUSCA INTELIGENTE: Modelo Exato + Peça Parcial
         function verificarEstoque(pecaNome, veiculoModelo) {
             if (!pecaNome || !veiculoModelo || dadosEstoque.length === 0) return { tem: false };
+            let pB = pecaNome.toUpperCase().trim(), vB = veiculoModelo.toUpperCase().trim();
 
-            let pBusca = pecaNome.toUpperCase().trim();
-            let vBusca = veiculoModelo.toUpperCase().trim();
-
-            let encontrado = dadosEstoque.find(e => {
-                let pEst = (e["PEÇA"] || e["DESCRIÇÃO DA PEÇA"] || "").toUpperCase().trim();
-                let vEst = (e["MODELO"] || e["VEÍCULO"] || "").toUpperCase().trim();
-                let retirada = (e["DATA RETIRADA"] || e["OS RECEPTOR"] || "").toString().trim();
-                
-                // Regra: Modelo igual E Peça contém o termo E Não foi retirada
-                return vEst === vBusca && pEst.includes(pBusca) && retirada === "";
+            let enc = dadosEstoque.find(e => {
+                let pE = (e["PEÇA"] || e["DESCRIÇÃO DA PEÇA"] || "").toUpperCase().trim();
+                let vE = (e["MODELO"] || e["VEÍCULO"] || "").toUpperCase().trim();
+                let ret = (e["DATA RETIRADA"] || e["OS RECEPTOR"] || "").toString().trim();
+                // Importante: No link atual as tabelas são iguais, então ele SEMPRE vai achar a si mesmo.
+                // Isso só funcionará 100% quando o estoqueURL for a aba correta.
+                return vE === vB && pE.includes(pB) && ret === "";
             });
-
-            return encontrado ? { tem: true, loc: encontrado["NUMERAÇÃO"] || encontrado["NÚMERO"] || "S/L" } : { tem: false };
+            return enc ? { tem: true, loc: enc["NUMERAÇÃO"] || enc["NÚMERO"] || "S/L" } : { tem: false };
         }
 
         function criarCardAgrupado(os, modelo, itens, cor) {
@@ -140,40 +134,23 @@
 
                 return `
                 <div style="margin-bottom:8px; border-bottom:1px solid #27272a; padding-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-size:14px;"><b>Peça:</b> ${i.desc} ${badge}</div>
-                        <div style="font-size:12px; color:#a1a1aa;">${i.det || ""}</div>
-                    </div>
+                    <div><div style="font-size:14px;"><b>Peça:</b> ${i.desc} ${badge}</div><div style="font-size:12px; color:#a1a1aa;">${i.det || ""}</div></div>
                     <span class="status ${i.cl}">${i.st}</span>
                 </div>`;
             }).join('');
 
-            return `
-            <div class="os-card">
-                <div class="os-top" style="border-bottom:2px solid ${cor}; margin-bottom:10px; padding-bottom:5px;">
-                    <span class="os-id">OS ${os} <span class="os-modelo">${modelo}</span></span>
-                    <span style="font-size:12px; color:#a1a1aa;">${itens.length} item(s)</span>
-                </div>
-                <div class="os-body">${htmlItens}</div>
-            </div>`;
+            return `<div class="os-card"><div class="os-top" style="border-bottom:2px solid ${cor}; margin-bottom:10px; padding-bottom:5px;"><span class="os-id">OS ${os} <span class="os-modelo">${modelo}</span></span></div><div class="os-body">${htmlItens}</div></div>`;
         }
 
         function carregarTudo() {
-            // Carrega Estoque Primeiro
-            Papa.parse(estoqueURL, {
+            Papa.parse(solicitacoesURL + "&t=" + new Date().getTime(), {
                 download: true, header: true, skipEmptyLines: true,
-                complete: function(resEst) {
-                    dadosEstoque = resEst.data;
-                    
-                    // Depois carrega Solicitações
-                    Papa.parse(solicitacoesURL + "&t=" + new Date().getTime(), {
-                        download: true, header: true, skipEmptyLines: true,
-                        complete: function(resSol) {
-                            dadosSolicitacoes = resSol.data;
-                            processarDados();
-                        }
-                    });
-                }
+                complete: function(res) {
+                    dadosSolicitacoes = res.data;
+                    dadosEstoque = res.data; // Por enquanto usa a mesma base para não quebrar
+                    processarDados();
+                },
+                error: function() { console.error("Erro ao carregar CSV principal"); }
             });
         }
 
@@ -187,33 +164,26 @@
 
             dadosSolicitacoes.forEach(r => {
                 let os = r["OS"] || "S/N", mod = (r["MODELO"] || r["VEÍCULO"] || "N/A").toUpperCase();
-                let dS = parseBRDate(r["DATA SOLICITAÇÃO"] || r["DATA DE SOLICITAÇÃO"]);
-                let dC = parseBRDate(r["DATA DA COMPRA"]), dE = parseBRDate(r["DATA DE ENTREGA"]);
-                let pE = parseBRDate(r["PRAZO"] || r["PRAZO DE ENTREGA"]);
-                let v = (r["VALOR"] || "").toLowerCase();
+                let dS = parseBRDate(r["DATA SOLICITAÇÃO"] || r["DATA DE SOLICITAÇÃO"]), dC = parseBRDate(r["DATA DA COMPRA"]), dE = parseBRDate(r["DATA DE ENTREGA"]);
+                let pE = parseBRDate(r["PRAZO"] || r["PRAZO DE ENTREGA"]), v = (r["VALOR"] || "").toLowerCase();
 
-                // Movimento Hoje
                 if(sameDay(dS, hoje) || sameDay(dC, hoje) || sameDay(dE, hoje)){
                     if(sameDay(dS, hoje)) sH++;
-                    if(sameDay(dC, hoje)) cH++;
-                    if(sameDay(dE, hoje)) eH++;
                     if(!gH[os]) gH[os] = { m: mod, i: [] };
                     gH[os].i.push({ desc: r["DESCRIÇÃO DA PEÇA"], st: sameDay(dE, hoje) ? "Entregue" : (sameDay(dC, hoje) ? "Comprada" : "Solicitada"), cl: sameDay(dE, hoje) ? "status-entregue" : "status-comprada" });
                 }
 
-                // Atrasadas / No Prazo
                 if(dE) ent++;
                 else if(pE){
                     if(new Date() > pE){
                         atr++; if(!gA[os]) gA[os] = { m: mod, i: [] };
-                        gA[os].i.push({ desc: r["DESCRIÇÃO DA PEÇA"], st: "ATRASADA", cl: "status-solicitada", det: "Prazo: " + pE.toLocaleDateString() });
+                        gA[os].i.push({ desc: r["DESCRIÇÃO DA PEÇA"], st: "ATRASADA", cl: "status-solicitada", det: "Venceu: " + pE.toLocaleDateString() });
                     } else {
                         prz++; if(!gP[os]) gP[os] = { m: mod, i: [] };
-                        gP[os].i.push({ desc: r["DESCRIÇÃO DA PEÇA"], st: "NO PRAZO", cl: "status-entregue", det: "Chega em: " + pE.toLocaleDateString() });
+                        gP[os].i.push({ desc: r["DESCRIÇÃO DA PEÇA"], st: "NO PRAZO", cl: "status-entregue", det: "Prazo: " + pE.toLocaleDateString() });
                     }
                 }
 
-                // Cotação
                 if(!v || v.includes("cot")){
                     if(!gN[os]) gN[os] = { m: mod, i: [] };
                     gN[os].i.push({ desc: r["DESCRIÇÃO DA PEÇA"], st: "COTAÇÃO", cl: "status-comprada" });
@@ -241,7 +211,7 @@
         function buscarOS() {
             let os = document.getElementById("osSelect").value, t = document.getElementById("tOS"); t.innerHTML = ""; if(!os) return;
             let filtered = dadosSolicitacoes.filter(r => r["OS"] == os);
-            if(filtered.length > 0) t.innerHTML = criarCardAgrupado(os, filtered[0]["MODELO"] || "N/A", filtered.map(r => ({ desc: r["DESCRIÇÃO DA PEÇA"], st: "Info", cl: "status-comprada" })), "#fff");
+            if(filtered.length > 0) t.innerHTML = criarCardAgrupado(os, filtered[0]["MODELO"] || "N/A", filtered.map(r => ({ desc: r["DESCRIÇÃO DA PEÇA"], st: "Status", cl: "status-comprada" })), "#fff");
         }
 
         function toggleMenu() { let m = document.getElementById("sideMenu"); m.style.left = m.style.left === "0px" ? "-250px" : "0px"; }
